@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: social-orbit
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PASSWORD
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: DATABASE_PATH
+        value: /data/social-orbit.db
+    disk:
+      name: social-orbit-data
+      mountPath: /data
+      sizeGB: 1
