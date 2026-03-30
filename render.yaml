@@ -13,8 +13,4 @@ services:
       - key: SESSION_SECRET
         generateValue: true
       - key: DATABASE_PATH
-        value: /data/social-orbit.db
-    disk:
-      name: social-orbit-data
-      mountPath: /data
-      sizeGB: 1
+        value: /opt/render/project/src/data/social-orbit.db
