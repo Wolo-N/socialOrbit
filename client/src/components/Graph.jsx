@@ -80,18 +80,34 @@ export default function Graph({ friends, events, onSelectFriend, selectedFriend 
       .append('feMergeNode')
       .attr('in', (d) => d);
 
-    // Orbital rings
+    // Concentric distance rings (score → distance)
     const ringGroup = svg.append('g').attr('class', 'rings');
-    [75, 150, 225].forEach((r) => {
+    const rings = [
+      { score: 75, label: 'Close' },
+      { score: 50, label: 'Regular' },
+      { score: 25, label: 'Distant' },
+      { score: 0, label: 'Fading' },
+    ];
+    rings.forEach(({ score, label }) => {
+      const r = getDistance(score);
       ringGroup
         .append('circle')
         .attr('cx', cx)
         .attr('cy', cy)
         .attr('r', r)
         .attr('fill', 'none')
-        .attr('stroke', 'rgba(255,255,255,0.03)')
+        .attr('stroke', 'rgba(255,255,255,0.05)')
         .attr('stroke-width', 1)
         .attr('stroke-dasharray', '4,8');
+      ringGroup
+        .append('text')
+        .attr('x', cx)
+        .attr('y', cy - r + 4)
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'rgba(255,255,255,0.15)')
+        .attr('font-family', 'DM Mono, monospace')
+        .attr('font-size', '9px')
+        .text(label);
     });
 
     // Build nodes and links
@@ -176,25 +192,37 @@ export default function Graph({ friends, events, onSelectFriend, selectedFriend 
       .append('g')
       .attr('cursor', (d) => (d.isMe ? 'default' : 'pointer'))
       .call(
-        d3
-          .drag()
-          .on('start', (event, d) => {
-            if (d.isMe) return;
-            if (!event.active) simulation.alphaTarget(0.3).restart();
-            d.fx = d.x;
-            d.fy = d.y;
-          })
-          .on('drag', (event, d) => {
-            if (d.isMe) return;
-            d.fx = event.x;
-            d.fy = event.y;
-          })
-          .on('end', (event, d) => {
-            if (d.isMe) return;
-            if (!event.active) simulation.alphaTarget(0);
-            d.fx = null;
-            d.fy = null;
-          })
+        (() => {
+          let dragStartX, dragStartY;
+          return d3
+            .drag()
+            .on('start', (event, d) => {
+              if (d.isMe) return;
+              dragStartX = event.x;
+              dragStartY = event.y;
+              if (!event.active) simulation.alphaTarget(0.3).restart();
+              d.fx = d.x;
+              d.fy = d.y;
+            })
+            .on('drag', (event, d) => {
+              if (d.isMe) return;
+              d.fx = event.x;
+              d.fy = event.y;
+            })
+            .on('end', (event, d) => {
+              if (d.isMe) return;
+              if (!event.active) simulation.alphaTarget(0);
+              d.fx = null;
+              d.fy = null;
+              // Treat as click if barely moved
+              const dx = event.x - dragStartX;
+              const dy = event.y - dragStartY;
+              if (Math.sqrt(dx * dx + dy * dy) < 5) {
+                tooltip.classed('visible', false);
+                onSelectFriend(d.data);
+              }
+            });
+        })()
       );
 
     // Me node
@@ -270,10 +298,6 @@ export default function Graph({ friends, events, onSelectFriend, selectedFriend 
       })
       .on('mouseout', () => {
         tooltip.classed('visible', false);
-      })
-      .on('click', (event, d) => {
-        tooltip.classed('visible', false);
-        onSelectFriend(d.data);
       });
 
     // Tick
