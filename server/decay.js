@@ -14,7 +14,7 @@ export function applyDecay(db) {
       const lastDate = row.last_decay_date || today;
       const days = Math.floor((new Date(today) - new Date(lastDate)) / 86400000);
       if (days <= 0) continue;
-      let newScore = row.score * Math.pow(0.98, days);
+      let newScore = row.score * Math.pow(0.99, days);
       newScore = Math.min(100, Math.max(0, newScore));
       update.run(newScore, today, row.friend_id);
     }
@@ -69,7 +69,7 @@ export function recalculateScores(db, friendId) {
     if (lastDate) {
       const days = Math.floor((new Date(evt.date) - new Date(lastDate)) / 86400000);
       if (days > 0) {
-        score = score * Math.pow(0.98, days);
+        score = score * Math.pow(0.99, days);
       }
     }
 
@@ -87,7 +87,7 @@ export function recalculateScores(db, friendId) {
   if (lastDate) {
     const days = Math.floor((new Date(today) - new Date(lastDate)) / 86400000);
     if (days > 0) {
-      score = score * Math.pow(0.98, days);
+      score = score * Math.pow(0.99, days);
     }
   }
   score = Math.min(100, Math.max(0, score));
