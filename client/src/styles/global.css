@@ -350,7 +350,7 @@ input::placeholder, textarea::placeholder {
   bottom: 0;
   width: 380px;
   max-width: 100%;
-  pointer-events: all;
+  pointer-events: none;
   padding: 24px;
   overflow-y: auto;
   transform: translateX(100%);
@@ -364,6 +364,7 @@ input::placeholder, textarea::placeholder {
 
 .friend-panel.open {
   transform: translateX(0);
+  pointer-events: all;
 }
 
 .panel-header {
