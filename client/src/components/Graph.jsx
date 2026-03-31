@@ -96,15 +96,15 @@ export default function Graph({ friends, events, onSelectFriend, selectedFriend 
         .attr('cy', cy)
         .attr('r', r)
         .attr('fill', 'none')
-        .attr('stroke', 'rgba(255,255,255,0.12)')
-        .attr('stroke-width', 1)
+        .attr('stroke', 'rgba(255,255,255,0.3)')
+        .attr('stroke-width', 1.5)
         .attr('stroke-dasharray', '6,6');
       ringGroup
         .append('text')
         .attr('x', cx)
         .attr('y', cy - r - 6)
         .attr('text-anchor', 'middle')
-        .attr('fill', 'rgba(255,255,255,0.35)')
+        .attr('fill', 'rgba(255,255,255,0.55)')
         .attr('font-family', 'DM Mono, monospace')
         .attr('font-size', '10px')
         .text(label);
@@ -188,11 +188,13 @@ export default function Graph({ friends, events, onSelectFriend, selectedFriend 
 
     // Draw nodes
     const nodeGroup = svg.append('g');
+    let dragStartPos = null;
     const dragBehavior = d3
       .drag()
-      .clickDistance(5)
+      .clickDistance(3)
       .on('start', (event, d) => {
         if (d.isMe) return;
+        dragStartPos = { x: event.x, y: event.y };
         if (!event.active) simulation.alphaTarget(0.3).restart();
         d.fx = d.x;
         d.fy = d.y;
@@ -207,6 +209,16 @@ export default function Graph({ friends, events, onSelectFriend, selectedFriend 
         if (!event.active) simulation.alphaTarget(0);
         d.fx = null;
         d.fy = null;
+        // Treat as click if barely moved
+        if (dragStartPos) {
+          const dx = event.x - dragStartPos.x;
+          const dy = event.y - dragStartPos.y;
+          if (Math.sqrt(dx * dx + dy * dy) < 5) {
+            tooltip.classed('visible', false);
+            onSelectFriend(d.data);
+          }
+        }
+        dragStartPos = null;
       });
 
     const nodeElements = nodeGroup
@@ -254,8 +266,19 @@ export default function Graph({ friends, events, onSelectFriend, selectedFriend 
     // Friend nodes
     const friendGroups = nodeElements.filter((d) => !d.isMe);
 
+    // Selection ring (visible when selected)
     friendGroups
       .append('circle')
+      .attr('class', 'select-ring')
+      .attr('r', (d) => Math.max(10, Math.min(22, 8 + d.total_events * 2)) + 5)
+      .attr('fill', 'none')
+      .attr('stroke', 'rgba(123, 110, 246, 0.6)')
+      .attr('stroke-width', 2)
+      .attr('opacity', (d) => (selectedFriend && d.id === selectedFriend.id ? 1 : 0));
+
+    friendGroups
+      .append('circle')
+      .attr('class', 'friend-circle')
       .attr('r', (d) => Math.max(10, Math.min(22, 8 + d.total_events * 2)))
       .attr('fill', (d) => getRecencyColor(d.last_seen))
       .attr('opacity', 0.85)
@@ -271,7 +294,8 @@ export default function Graph({ friends, events, onSelectFriend, selectedFriend 
       .attr('font-size', '10px');
 
     friendGroups
-      .on('mouseover', (event, d) => {
+      .on('mouseover', function (event, d) {
+        d3.select(this).select('.friend-circle').transition().duration(150).attr('opacity', 1);
         const lastSeenText = d.last_seen
           ? `${Math.floor((Date.now() - new Date(d.last_seen)) / 86400000)}d ago`
           : 'never';
@@ -280,7 +304,8 @@ export default function Graph({ friends, events, onSelectFriend, selectedFriend 
             `<strong>${d.name}</strong><br/>` +
               `Score: ${d.score?.toFixed(1)}<br/>` +
               `Last seen: ${lastSeenText}<br/>` +
-              `Hangouts: ${d.total_events} (${d.solo_count} solo, ${d.group_count} group)`
+              `Hangouts: ${d.total_events} (${d.solo_count} solo, ${d.group_count} group)<br/>` +
+              `<span style="color:rgba(123,110,246,0.8);font-size:0.65rem">click to view details</span>`
           )
           .style('left', event.clientX + 12 + 'px')
           .style('top', event.clientY - 10 + 'px')
@@ -291,7 +316,8 @@ export default function Graph({ friends, events, onSelectFriend, selectedFriend 
           .style('left', event.clientX + 12 + 'px')
           .style('top', event.clientY - 10 + 'px');
       })
-      .on('mouseout', () => {
+      .on('mouseout', function () {
+        d3.select(this).select('.friend-circle').transition().duration(150).attr('opacity', 0.85);
         tooltip.classed('visible', false);
       });
 
@@ -309,7 +335,7 @@ export default function Graph({ friends, events, onSelectFriend, selectedFriend 
     return () => {
       simulation.stop();
     };
-  }, [friends, events, dimensions, onSelectFriend]);
+  }, [friends, events, dimensions, onSelectFriend, selectedFriend]);
 
   return (
     <div className="graph-container">
