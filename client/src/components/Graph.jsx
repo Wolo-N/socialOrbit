@@ -96,17 +96,17 @@ export default function Graph({ friends, events, onSelectFriend, selectedFriend 
         .attr('cy', cy)
         .attr('r', r)
         .attr('fill', 'none')
-        .attr('stroke', 'rgba(255,255,255,0.05)')
+        .attr('stroke', 'rgba(255,255,255,0.12)')
         .attr('stroke-width', 1)
-        .attr('stroke-dasharray', '4,8');
+        .attr('stroke-dasharray', '6,6');
       ringGroup
         .append('text')
         .attr('x', cx)
-        .attr('y', cy - r + 4)
+        .attr('y', cy - r - 6)
         .attr('text-anchor', 'middle')
-        .attr('fill', 'rgba(255,255,255,0.15)')
+        .attr('fill', 'rgba(255,255,255,0.35)')
         .attr('font-family', 'DM Mono, monospace')
-        .attr('font-size', '9px')
+        .attr('font-size', '10px')
         .text(label);
     });
 
@@ -183,47 +183,45 @@ export default function Graph({ friends, events, onSelectFriend, selectedFriend 
       .attr('stroke-width', (d) => (d.isCo ? 1 : 1.5))
       .attr('stroke-dasharray', (d) => (d.isCo ? '3,5' : 'none'));
 
+    // Tooltip (defined early so click handler can reference it)
+    const tooltip = d3.select(tooltipRef.current);
+
     // Draw nodes
     const nodeGroup = svg.append('g');
+    const dragBehavior = d3
+      .drag()
+      .clickDistance(5)
+      .on('start', (event, d) => {
+        if (d.isMe) return;
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+      })
+      .on('drag', (event, d) => {
+        if (d.isMe) return;
+        d.fx = event.x;
+        d.fy = event.y;
+      })
+      .on('end', (event, d) => {
+        if (d.isMe) return;
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+      });
+
     const nodeElements = nodeGroup
       .selectAll('g')
       .data(nodes)
       .enter()
       .append('g')
       .attr('cursor', (d) => (d.isMe ? 'default' : 'pointer'))
-      .call(
-        (() => {
-          let dragStartX, dragStartY;
-          return d3
-            .drag()
-            .on('start', (event, d) => {
-              if (d.isMe) return;
-              dragStartX = event.x;
-              dragStartY = event.y;
-              if (!event.active) simulation.alphaTarget(0.3).restart();
-              d.fx = d.x;
-              d.fy = d.y;
-            })
-            .on('drag', (event, d) => {
-              if (d.isMe) return;
-              d.fx = event.x;
-              d.fy = event.y;
-            })
-            .on('end', (event, d) => {
-              if (d.isMe) return;
-              if (!event.active) simulation.alphaTarget(0);
-              d.fx = null;
-              d.fy = null;
-              // Treat as click if barely moved
-              const dx = event.x - dragStartX;
-              const dy = event.y - dragStartY;
-              if (Math.sqrt(dx * dx + dy * dy) < 5) {
-                tooltip.classed('visible', false);
-                onSelectFriend(d.data);
-              }
-            });
-        })()
-      );
+      .call(dragBehavior)
+      .on('click', (event, d) => {
+        if (d.isMe) return;
+        event.stopPropagation();
+        tooltip.classed('visible', false);
+        onSelectFriend(d.data);
+      });
 
     // Me node
     nodeElements
@@ -271,9 +269,6 @@ export default function Graph({ friends, events, onSelectFriend, selectedFriend 
       .attr('fill', 'rgba(255,255,255,0.6)')
       .attr('font-family', 'DM Mono, monospace')
       .attr('font-size', '10px');
-
-    // Tooltip
-    const tooltip = d3.select(tooltipRef.current);
 
     friendGroups
       .on('mouseover', (event, d) => {
