@@ -179,8 +179,15 @@ export default function Graph({ friends, events, onSelectFriend, selectedFriend 
       .data(allLinks)
       .enter()
       .append('line')
-      .attr('stroke', (d) => (d.isCo ? 'rgba(123, 110, 246, 0.12)' : 'rgba(255,255,255,0.06)'))
-      .attr('stroke-width', (d) => (d.isCo ? 1 : 1.5))
+      .attr('stroke', (d) => {
+        if (!d.isCo) return 'rgba(255,255,255,0.06)';
+        const opacity = Math.min(0.6, 0.1 + d.count * 0.08);
+        return `rgba(123, 110, 246, ${opacity})`;
+      })
+      .attr('stroke-width', (d) => {
+        if (!d.isCo) return 1.5;
+        return Math.min(3, 0.8 + d.count * 0.4);
+      })
       .attr('stroke-dasharray', (d) => (d.isCo ? '3,5' : 'none'));
 
     // Tooltip (defined early so click handler can reference it)

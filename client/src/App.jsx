@@ -105,7 +105,6 @@ export default function App() {
           onSelectFriend={(f) => setSelectedFriend(f)}
           selectedFriend={selectedFriend}
         />
-        <div style={{ position: 'absolute', right: 20, top: '50%', color: 'white', fontSize: '2rem', fontWeight: 'bold', zIndex: 999 }}>HELLO</div>
         <div className="panel-overlay">
           <div
             className={`panel-backdrop ${selectedFriend ? 'visible' : ''}`}
