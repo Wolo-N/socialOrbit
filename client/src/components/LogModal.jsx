@@ -1,7 +1,34 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { createEvent, createFriend } from '../api.js';
 
-export default function LogModal({ friends, onClose, onRefresh }) {
+function deriveGroups(events, friends) {
+  const groupEvents = events.filter(
+    (e) => e.type === 'group' && e.friends && e.friends.length >= 2
+  );
+
+  // Build unique groups by sorted friend IDs
+  const seen = new Map();
+  for (const evt of groupEvents) {
+    const ids = evt.friends.map((f) => f.id).sort((a, b) => a - b);
+    const key = ids.join('-');
+    if (!seen.has(key)) {
+      seen.set(key, {
+        ids,
+        names: ids.map((id) => friends.find((f) => f.id === id)?.name).filter(Boolean),
+        count: 1,
+      });
+    } else {
+      seen.get(key).count++;
+    }
+  }
+
+  // Sort by frequency (most common groups first)
+  return Array.from(seen.values())
+    .filter((g) => g.names.length >= 2)
+    .sort((a, b) => b.count - a.count);
+}
+
+export default function LogModal({ friends, events = [], onClose, onRefresh }) {
   const today = new Date().toISOString().split('T')[0];
   const [date, setDate] = useState(today);
   const [type, setType] = useState('1on1');
@@ -10,12 +37,31 @@ export default function LogModal({ friends, onClose, onRefresh }) {
   const [newFriendName, setNewFriendName] = useState('');
   const [nlInput, setNlInput] = useState('');
   const [saving, setSaving] = useState(false);
+  const [expandedGroup, setExpandedGroup] = useState(null);
+
+  const groups = useMemo(() => deriveGroups(events, friends), [events, friends]);
 
   const toggleFriend = (id) => {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
   };
+
+  const selectGroup = (group) => {
+    setSelectedIds((prev) => {
+      const combined = new Set(prev);
+      for (const id of group.ids) combined.add(id);
+      return Array.from(combined);
+    });
+    if (group.ids.length > 1) setType('group');
+  };
+
+  const deselectGroup = (group) => {
+    setSelectedIds((prev) => prev.filter((id) => !group.ids.includes(id)));
+  };
+
+  const isGroupFullySelected = (group) =>
+    group.ids.every((id) => selectedIds.includes(id));
 
   const handleAddFriend = async () => {
     if (!newFriendName.trim()) return;
@@ -117,6 +163,54 @@ export default function LogModal({ friends, onClose, onRefresh }) {
 
         <div className="modal-field">
           <label>Friends</label>
+
+          {groups.length > 0 && (
+            <div className="group-tabs">
+              {groups.map((group, i) => {
+                const isExpanded = expandedGroup === i;
+                const allSelected = isGroupFullySelected(group);
+                return (
+                  <div key={i} className="group-tab">
+                    <div className="group-tab-header">
+                      <button
+                        className={`group-tab-toggle ${isExpanded ? 'expanded' : ''}`}
+                        onClick={() => setExpandedGroup(isExpanded ? null : i)}
+                      >
+                        <span className="group-tab-arrow">{isExpanded ? '\u25BC' : '\u25B6'}</span>
+                        <span className="group-tab-names">{group.names.join(', ')}</span>
+                        <span className="group-tab-count">{group.count}x</span>
+                      </button>
+                      <button
+                        className={`btn btn-ghost group-select-btn ${allSelected ? 'selected' : ''}`}
+                        onClick={() => allSelected ? deselectGroup(group) : selectGroup(group)}
+                      >
+                        {allSelected ? 'Deselect' : 'Select all'}
+                      </button>
+                    </div>
+                    {isExpanded && (
+                      <div className="group-tab-members">
+                        {group.ids.map((id) => {
+                          const f = friends.find((fr) => fr.id === id);
+                          if (!f) return null;
+                          return (
+                            <button
+                              key={id}
+                              className={`friend-chip ${selectedIds.includes(id) ? 'selected' : ''}`}
+                              onClick={() => toggleFriend(id)}
+                            >
+                              {f.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="friend-chips-section-label">All friends</div>
           <div className="friend-chips">
             {friends.map((f) => (
               <button

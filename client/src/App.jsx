@@ -120,6 +120,7 @@ export default function App() {
       {showLogModal && (
         <LogModal
           friends={friends}
+          events={events}
           onClose={() => setShowLogModal(false)}
           onRefresh={refresh}
         />
