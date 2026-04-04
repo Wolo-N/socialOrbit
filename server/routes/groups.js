@@ -67,11 +67,24 @@ router.post('/', (req, res) => {
   res.json({ id: groupId, name, members: friendIds });
 });
 
-// Rename a group
+// Update a group (rename and/or update members)
 router.put('/:id', (req, res) => {
-  const { name } = req.body;
-  if (!name) return res.status(400).json({ error: 'Name required' });
-  db.prepare('UPDATE friend_groups SET name = ? WHERE id = ?').run(name, req.params.id);
+  const { name, friendIds } = req.body;
+  if (!name && !friendIds) return res.status(400).json({ error: 'Name or friendIds required' });
+
+  const tx = db.transaction(() => {
+    if (name) {
+      db.prepare('UPDATE friend_groups SET name = ? WHERE id = ?').run(name, req.params.id);
+    }
+    if (friendIds && friendIds.length >= 2) {
+      db.prepare('DELETE FROM friend_group_members WHERE group_id = ?').run(req.params.id);
+      const insert = db.prepare('INSERT INTO friend_group_members (group_id, friend_id) VALUES (?, ?)');
+      for (const fid of friendIds) {
+        insert.run(req.params.id, fid);
+      }
+    }
+  });
+  tx();
   res.json({ success: true });
 });
 

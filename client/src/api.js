@@ -83,10 +83,10 @@ export async function createGroup(name, friendIds) {
   });
 }
 
-export async function renameGroup(id, name) {
+export async function updateGroup(id, { name, friendIds } = {}) {
   return request(`/api/groups/${id}`, {
     method: 'PUT',
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ name, friendIds }),
   });
 }
 

@@ -5,7 +5,7 @@ import {
   getGroups,
   getGroupSuggestions,
   createGroup,
-  renameGroup,
+  updateGroup,
   deleteGroup,
   dismissGroupSuggestion,
 } from '../api.js';
@@ -26,6 +26,8 @@ export default function LogModal({ friends, events = [], onClose, onRefresh }) {
   const [expandedGroup, setExpandedGroup] = useState(null);
   const [editingGroupId, setEditingGroupId] = useState(null);
   const [editingName, setEditingName] = useState('');
+  const [editingMembers, setEditingMembers] = useState(null); // { groupId, memberIds }
+
 
   useEffect(() => {
     loadGroups();
@@ -74,8 +76,28 @@ export default function LogModal({ friends, events = [], onClose, onRefresh }) {
 
   const handleRenameGroup = async (groupId) => {
     if (!editingName.trim()) return;
-    await renameGroup(groupId, editingName.trim());
+    await updateGroup(groupId, { name: editingName.trim() });
     setEditingGroupId(null);
+    await loadGroups();
+  };
+
+  const startEditingMembers = (group) => {
+    setEditingMembers({ groupId: group.id, memberIds: group.members.map((m) => m.id) });
+  };
+
+  const toggleEditingMember = (friendId) => {
+    setEditingMembers((prev) => ({
+      ...prev,
+      memberIds: prev.memberIds.includes(friendId)
+        ? prev.memberIds.filter((id) => id !== friendId)
+        : [...prev.memberIds, friendId],
+    }));
+  };
+
+  const saveEditingMembers = async () => {
+    if (!editingMembers || editingMembers.memberIds.length < 2) return;
+    await updateGroup(editingMembers.groupId, { friendIds: editingMembers.memberIds });
+    setEditingMembers(null);
     await loadGroups();
   };
 
@@ -188,47 +210,79 @@ export default function LogModal({ friends, events = [], onClose, onRefresh }) {
                       </div>
                       {isExpanded && (
                         <div className="group-tab-body">
-                          <div className="group-tab-members">
-                            {group.members.map((m) => (
-                              <button
-                                key={m.id}
-                                className={`friend-chip ${selectedIds.includes(m.id) ? 'selected' : ''}`}
-                                onClick={() => toggleFriend(m.id)}
-                              >
-                                {m.name}
-                              </button>
-                            ))}
-                          </div>
-                          <div className="group-tab-actions">
-                            {isEditing ? (
-                              <div className="group-rename-row">
-                                <input
-                                  type="text"
-                                  value={editingName}
-                                  onChange={(e) => setEditingName(e.target.value)}
-                                  onKeyDown={(e) => e.key === 'Enter' && handleRenameGroup(group.id)}
-                                  autoFocus
-                                />
-                                <button className="btn btn-ghost" onClick={() => handleRenameGroup(group.id)}>Save</button>
-                                <button className="btn btn-ghost" onClick={() => setEditingGroupId(null)}>Cancel</button>
+                          {editingMembers && editingMembers.groupId === group.id ? (
+                            <>
+                              <div className="group-tab-members">
+                                {friends.map((f) => (
+                                  <button
+                                    key={f.id}
+                                    className={`friend-chip ${editingMembers.memberIds.includes(f.id) ? 'selected' : ''}`}
+                                    onClick={() => toggleEditingMember(f.id)}
+                                  >
+                                    {f.name}
+                                  </button>
+                                ))}
                               </div>
-                            ) : (
-                              <>
-                                <button
-                                  className="btn btn-ghost group-action-btn"
-                                  onClick={() => { setEditingGroupId(group.id); setEditingName(group.name); }}
-                                >
-                                  Rename
+                              <div className="group-tab-actions">
+                                <button className="btn btn-ghost group-action-btn confirm" onClick={saveEditingMembers}>
+                                  Save members
                                 </button>
-                                <button
-                                  className="btn btn-ghost group-action-btn danger"
-                                  onClick={() => handleDeleteGroup(group.id)}
-                                >
-                                  Delete group
+                                <button className="btn btn-ghost group-action-btn" onClick={() => setEditingMembers(null)}>
+                                  Cancel
                                 </button>
-                              </>
-                            )}
-                          </div>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="group-tab-members">
+                                {group.members.map((m) => (
+                                  <button
+                                    key={m.id}
+                                    className={`friend-chip ${selectedIds.includes(m.id) ? 'selected' : ''}`}
+                                    onClick={() => toggleFriend(m.id)}
+                                  >
+                                    {m.name}
+                                  </button>
+                                ))}
+                              </div>
+                              <div className="group-tab-actions">
+                                {isEditing ? (
+                                  <div className="group-rename-row">
+                                    <input
+                                      type="text"
+                                      value={editingName}
+                                      onChange={(e) => setEditingName(e.target.value)}
+                                      onKeyDown={(e) => e.key === 'Enter' && handleRenameGroup(group.id)}
+                                      autoFocus
+                                    />
+                                    <button className="btn btn-ghost" onClick={() => handleRenameGroup(group.id)}>Save</button>
+                                    <button className="btn btn-ghost" onClick={() => setEditingGroupId(null)}>Cancel</button>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <button
+                                      className="btn btn-ghost group-action-btn"
+                                      onClick={() => { setEditingGroupId(group.id); setEditingName(group.name); }}
+                                    >
+                                      Rename
+                                    </button>
+                                    <button
+                                      className="btn btn-ghost group-action-btn"
+                                      onClick={() => startEditingMembers(group)}
+                                    >
+                                      Edit members
+                                    </button>
+                                    <button
+                                      className="btn btn-ghost group-action-btn danger"
+                                      onClick={() => handleDeleteGroup(group.id)}
+                                    >
+                                      Delete group
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
