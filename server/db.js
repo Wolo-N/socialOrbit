@@ -51,6 +51,24 @@ db.exec(`
     last_decay_date TEXT DEFAULT (date('now')),
     FOREIGN KEY (friend_id) REFERENCES friends(id) ON DELETE CASCADE
   );
+
+  CREATE TABLE IF NOT EXISTS friend_groups (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS friend_group_members (
+    group_id INTEGER NOT NULL,
+    friend_id INTEGER NOT NULL,
+    PRIMARY KEY (group_id, friend_id),
+    FOREIGN KEY (group_id) REFERENCES friend_groups(id) ON DELETE CASCADE,
+    FOREIGN KEY (friend_id) REFERENCES friends(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS dismissed_group_suggestions (
+    key TEXT PRIMARY KEY
+  );
 `);
 
 // Seed data on first run

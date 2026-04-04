@@ -8,6 +8,7 @@ import { applyDecay } from './decay.js';
 import authRoutes from './routes/auth.js';
 import friendsRoutes from './routes/friends.js';
 import eventsRoutes from './routes/events.js';
+import groupsRoutes from './routes/groups.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -55,6 +56,7 @@ app.use('/api', (req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/friends', requireAuth, friendsRoutes);
 app.use('/api/events', requireAuth, eventsRoutes);
+app.use('/api/groups', requireAuth, groupsRoutes);
 
 // Export endpoint
 app.get('/api/export', requireAuth, (req, res) => {
@@ -62,7 +64,9 @@ app.get('/api/export', requireAuth, (req, res) => {
   const events = db.prepare('SELECT * FROM events').all();
   const eventFriends = db.prepare('SELECT * FROM event_friends').all();
   const scores = db.prepare('SELECT * FROM scores').all();
-  res.json({ friends, events, eventFriends, scores, exportedAt: new Date().toISOString() });
+  const friendGroups = db.prepare('SELECT * FROM friend_groups').all();
+  const friendGroupMembers = db.prepare('SELECT * FROM friend_group_members').all();
+  res.json({ friends, events, eventFriends, scores, friendGroups, friendGroupMembers, exportedAt: new Date().toISOString() });
 });
 
 // Import endpoint
@@ -104,6 +108,23 @@ app.post('/api/import', requireAuth, (req, res) => {
       );
       for (const s of scores) {
         insertScore.run(s.friend_id, s.score, s.last_seen, s.total_events, s.solo_count, s.group_count, s.last_decay_date);
+      }
+
+      // Import friend groups (if present)
+      db.prepare('DELETE FROM friend_group_members').run();
+      db.prepare('DELETE FROM friend_groups').run();
+      db.prepare('DELETE FROM dismissed_group_suggestions').run();
+      if (req.body.friendGroups) {
+        const insertGroup = db.prepare('INSERT INTO friend_groups (id, name, created_at) VALUES (?, ?, ?)');
+        for (const g of req.body.friendGroups) {
+          insertGroup.run(g.id, g.name, g.created_at);
+        }
+      }
+      if (req.body.friendGroupMembers) {
+        const insertGM = db.prepare('INSERT INTO friend_group_members (group_id, friend_id) VALUES (?, ?)');
+        for (const gm of req.body.friendGroupMembers) {
+          insertGM.run(gm.group_id, gm.friend_id);
+        }
       }
     });
 

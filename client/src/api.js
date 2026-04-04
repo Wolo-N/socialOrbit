@@ -67,3 +67,36 @@ export async function importData(data) {
     body: JSON.stringify(data),
   });
 }
+
+export async function getGroups() {
+  return request('/api/groups');
+}
+
+export async function getGroupSuggestions() {
+  return request('/api/groups/suggestions');
+}
+
+export async function createGroup(name, friendIds) {
+  return request('/api/groups', {
+    method: 'POST',
+    body: JSON.stringify({ name, friendIds }),
+  });
+}
+
+export async function renameGroup(id, name) {
+  return request(`/api/groups/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ name }),
+  });
+}
+
+export async function deleteGroup(id) {
+  return request(`/api/groups/${id}`, { method: 'DELETE' });
+}
+
+export async function dismissGroupSuggestion(key) {
+  return request('/api/groups/dismiss', {
+    method: 'POST',
+    body: JSON.stringify({ key }),
+  });
+}

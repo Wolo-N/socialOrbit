@@ -659,13 +659,59 @@ input::placeholder, textarea::placeholder {
   color: var(--accent-light);
 }
 
+.group-tab.suggestion {
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.group-tab-body {
+  border-top: 1px solid var(--border-glass);
+  background: rgba(255, 255, 255, 0.02);
+}
+
 .group-tab-members {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   padding: 8px 12px 10px 32px;
+}
+
+.group-tab-actions {
+  display: flex;
+  gap: 8px;
+  padding: 6px 12px 8px 32px;
   border-top: 1px solid var(--border-glass);
-  background: rgba(255, 255, 255, 0.02);
+}
+
+.group-action-btn {
+  font-size: 0.65rem !important;
+  padding: 3px 8px !important;
+}
+
+.group-action-btn.confirm {
+  color: #34d399 !important;
+}
+
+.group-action-btn.danger {
+  color: #f87171 !important;
+}
+
+.group-rename-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex: 1;
+}
+
+.group-rename-row input {
+  flex: 1;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+}
+
+.group-rename-row .btn {
+  font-size: 0.65rem !important;
+  padding: 3px 8px !important;
 }
 
 .friend-chips-section-label {
