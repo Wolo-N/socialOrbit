@@ -60,3 +60,10 @@ export async function deleteEvent(id) {
 export async function exportData() {
   return request('/api/export');
 }
+
+export async function importData(data) {
+  return request('/api/import', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}

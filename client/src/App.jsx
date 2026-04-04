@@ -96,7 +96,7 @@ export default function App() {
         events={events}
         onLogHangout={() => setShowLogModal(true)}
         onLogout={handleLogout}
-        onExport={null}
+        onRefresh={refresh}
       />
       <div className="app-main">
         <Graph

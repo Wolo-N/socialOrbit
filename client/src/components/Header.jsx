@@ -1,6 +1,8 @@
-import { exportData } from '../api.js';
+import { useRef } from 'react';
+import { exportData, importData } from '../api.js';
 
-export default function Header({ friends, events, onLogHangout, onLogout }) {
+export default function Header({ friends, events, onLogHangout, onLogout, onRefresh }) {
+  const fileInputRef = useRef(null);
   const totalEvents = events.length;
   const friendCount = friends.length;
 
@@ -58,6 +60,33 @@ export default function Header({ friends, events, onLogHangout, onLogout }) {
           </div>
         </div>
         <div className="header-right">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            style={{ display: 'none' }}
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                if (!data.friends || !data.events || !data.eventFriends || !data.scores) {
+                  alert('Invalid export file.');
+                  return;
+                }
+                if (!confirm('This will replace all current data. Continue?')) return;
+                await importData(data);
+                if (onRefresh) onRefresh();
+              } catch {
+                alert('Failed to import data.');
+              }
+              e.target.value = '';
+            }}
+          />
+          <button className="btn btn-ghost" onClick={() => fileInputRef.current?.click()} title="Import data">
+            &#x2912; Import
+          </button>
           <button className="btn btn-ghost" onClick={handleExport} title="Export data">
             &#x2913; Export
           </button>

@@ -65,6 +65,55 @@ app.get('/api/export', requireAuth, (req, res) => {
   res.json({ friends, events, eventFriends, scores, exportedAt: new Date().toISOString() });
 });
 
+// Import endpoint
+app.post('/api/import', requireAuth, (req, res) => {
+  const { friends, events, eventFriends, scores } = req.body;
+  if (!friends || !events || !eventFriends || !scores) {
+    return res.status(400).json({ error: 'Invalid import data. Must contain friends, events, eventFriends, and scores.' });
+  }
+
+  try {
+    const tx = db.transaction(() => {
+      // Clear existing data
+      db.prepare('DELETE FROM event_friends').run();
+      db.prepare('DELETE FROM scores').run();
+      db.prepare('DELETE FROM events').run();
+      db.prepare('DELETE FROM friends').run();
+
+      // Insert friends
+      const insertFriend = db.prepare('INSERT INTO friends (id, name, created_at) VALUES (?, ?, ?)');
+      for (const f of friends) {
+        insertFriend.run(f.id, f.name, f.created_at);
+      }
+
+      // Insert events
+      const insertEvent = db.prepare('INSERT INTO events (id, date, type, notes, created_at) VALUES (?, ?, ?, ?, ?)');
+      for (const e of events) {
+        insertEvent.run(e.id, e.date, e.type, e.notes, e.created_at);
+      }
+
+      // Insert event_friends
+      const insertEF = db.prepare('INSERT INTO event_friends (event_id, friend_id) VALUES (?, ?)');
+      for (const ef of eventFriends) {
+        insertEF.run(ef.event_id, ef.friend_id);
+      }
+
+      // Insert scores
+      const insertScore = db.prepare(
+        'INSERT INTO scores (friend_id, score, last_seen, total_events, solo_count, group_count, last_decay_date) VALUES (?, ?, ?, ?, ?, ?, ?)'
+      );
+      for (const s of scores) {
+        insertScore.run(s.friend_id, s.score, s.last_seen, s.total_events, s.solo_count, s.group_count, s.last_decay_date);
+      }
+    });
+
+    tx();
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Import failed: ' + err.message });
+  }
+});
+
 // Production: serve client build
 if (isProd) {
   const clientDist = path.join(__dirname, '..', 'client', 'dist');
