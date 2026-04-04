@@ -4,7 +4,7 @@ import { getEvents, deleteEvent, deleteFriend } from '../api.js';
 function getRecencyColor(lastSeen) {
   if (!lastSeen) return '#f87171';
   const days = Math.floor((Date.now() - new Date(lastSeen)) / 86400000);
-  if (days <= 7) return '#34d399';
+  if (days <= 15) return '#34d399';
   if (days <= 30) return '#fbbf24';
   if (days <= 60) return '#f97316';
   return '#f87171';

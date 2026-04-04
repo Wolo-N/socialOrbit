@@ -4,7 +4,7 @@ import * as d3 from 'd3';
 function getRecencyColor(lastSeen) {
   if (!lastSeen) return '#f87171'; // red — never seen
   const days = Math.floor((Date.now() - new Date(lastSeen)) / 86400000);
-  if (days <= 7) return '#34d399';   // green
+  if (days <= 15) return '#34d399';  // green
   if (days <= 30) return '#fbbf24';  // yellow
   if (days <= 60) return '#f97316';  // orange
   return '#f87171';                  // red
