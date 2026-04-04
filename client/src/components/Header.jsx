@@ -24,7 +24,11 @@ export default function Header({ friends, events, onLogHangout, onLogout, onRefr
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `social-orbit-export-${new Date().toISOString().split('T')[0]}.json`;
+      const d = new Date();
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const yyyy = d.getFullYear();
+      a.download = `social-orbit-export-${dd}-${mm}-${yyyy}.json`;
       a.click();
       URL.revokeObjectURL(url);
     } catch {

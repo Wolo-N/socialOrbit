@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react';
 import { getEvents, deleteEvent, deleteFriend } from '../api.js';
 
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const [y, m, d] = dateStr.split('-');
+  return `${d}/${m}/${y}`;
+}
+
 function getRecencyColor(lastSeen) {
   if (!lastSeen) return '#f87171';
   const days = Math.floor((Date.now() - new Date(lastSeen)) / 86400000);
@@ -92,7 +98,7 @@ export default function FriendPanel({ friend, onClose, onRefresh }) {
             <div key={evt.id} className="panel-event">
               <div className="panel-event-header">
                 <div>
-                  <span className="panel-event-date">{evt.date}</span>
+                  <span className="panel-event-date">{formatDate(evt.date)}</span>
                   <span className="panel-event-type">{evt.type}</span>
                 </div>
                 <button
