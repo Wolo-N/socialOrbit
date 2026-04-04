@@ -143,11 +143,9 @@ export default function Graph({ friends, events, onSelectFriend, selectedFriend 
     // Co-appearance links between friends
     const coLinks = [];
     coAppearMap.current.forEach((count, key) => {
-      if (count >= 2) {
-        const [a, b] = key.split('-').map(Number);
-        if (friends.find((f) => f.id === a) && friends.find((f) => f.id === b)) {
-          coLinks.push({ source: a, target: b, count, isCo: true });
-        }
+      const [a, b] = key.split('-').map(Number);
+      if (friends.find((f) => f.id === a) && friends.find((f) => f.id === b)) {
+        coLinks.push({ source: a, target: b, count, isCo: true });
       }
     });
 
@@ -161,8 +159,11 @@ export default function Graph({ friends, events, onSelectFriend, selectedFriend 
         d3
           .forceLink(allLinks)
           .id((d) => d.id)
-          .distance((d) => (d.isCo ? 100 : d.distance))
-          .strength((d) => (d.isCo ? 0.05 : 0.3))
+          .distance((d) => (d.isCo ? 80 : d.distance))
+          .strength((d) => {
+            if (!d.isCo) return 0.3;
+            return Math.min(0.06, 0.01 + d.count * 0.008);
+          })
       )
       .force('charge', d3.forceManyBody().strength(-80))
       .force('collision', d3.forceCollide().radius((d) => (d.isMe ? 35 : 20)))
