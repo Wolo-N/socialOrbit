@@ -138,7 +138,7 @@ export default function CalendarHeatmap({ events, start, end }) {
   }, [events, start, end, width]);
 
   return (
-    <div className="chart-container chart-container-flex" ref={containerRef}>
+    <div className="chart-container" ref={containerRef}>
       <svg ref={svgRef} />
       <div ref={tooltipRef} className="chart-tooltip" />
     </div>

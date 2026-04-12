@@ -200,6 +200,8 @@
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  grid-auto-rows: min-content;
+  align-items: start;
   gap: 14px;
 }
 
@@ -212,7 +214,6 @@
   padding: 14px 16px 12px;
   display: flex;
   flex-direction: column;
-  min-height: 240px;
 }
 
 .dashboard-card-wide {
@@ -242,14 +243,6 @@
 .chart-container {
   position: relative;
   width: 100%;
-  flex: 1;
-  min-height: 200px;
-}
-
-.chart-container-flex {
-  display: flex;
-  align-items: stretch;
-  justify-content: stretch;
 }
 
 .chart-container svg {

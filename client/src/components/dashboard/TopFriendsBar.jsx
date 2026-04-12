@@ -105,7 +105,7 @@ export default function TopFriendsBar({ events, friends, onSelectFriend }) {
   }, [top, width, onSelectFriend]);
 
   return (
-    <div className="chart-container chart-container-flex" ref={containerRef}>
+    <div className="chart-container" ref={containerRef}>
       <svg ref={svgRef} />
     </div>
   );

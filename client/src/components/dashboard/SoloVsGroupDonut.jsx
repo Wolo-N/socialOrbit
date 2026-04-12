@@ -10,7 +10,9 @@ export default function SoloVsGroupDonut({ events }) {
 
   useEffect(() => {
     if (!width) return;
-    const height = 220;
+    const height = 260;
+    const legendBandH = 38;
+    const donutAreaH = height - legendBandH;
     const svg = d3.select(svgRef.current).attr('width', width).attr('height', height);
     svg.selectAll('*').remove();
 
@@ -28,8 +30,8 @@ export default function SoloVsGroupDonut({ events }) {
     }
 
     const cx = width / 2;
-    const cy = height / 2;
-    const radius = Math.min(width, height) / 2 - 16;
+    const cy = donutAreaH / 2;
+    const radius = Math.min(width / 2, donutAreaH / 2) - 16;
     const inner = radius * 0.62;
 
     const data = [
@@ -67,8 +69,8 @@ export default function SoloVsGroupDonut({ events }) {
       .attr('font-size', '9px')
       .text('events');
 
-    // Legend below the donut
-    const legendY = cy + radius + 12;
+    // Legend in its reserved band at the bottom of the SVG
+    const legendY = donutAreaH + 14;
     const legend = svg.append('g').attr('transform', `translate(${cx},${legendY})`);
     const legendItems = [
       { label: 'solo', value: split.solo, color: '#7b6ef6' },
