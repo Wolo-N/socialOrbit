@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { checkAuth, login, logout, getFriends, getEvents } from './api.js';
 import Header from './components/Header.jsx';
 import Graph from './components/Graph.jsx';
+import Dashboard from './components/Dashboard.jsx';
 import FriendPanel from './components/FriendPanel.jsx';
 import LogModal from './components/LogModal.jsx';
 
@@ -13,6 +14,7 @@ export default function App() {
   const [showLogModal, setShowLogModal] = useState(false);
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [view, setView] = useState('orbit');
 
   const refresh = useCallback(async () => {
     try {
@@ -94,17 +96,27 @@ export default function App() {
       <Header
         friends={friends}
         events={events}
+        view={view}
+        onChangeView={setView}
         onLogHangout={() => setShowLogModal(true)}
         onLogout={handleLogout}
         onRefresh={refresh}
       />
       <div className="app-main">
-        <Graph
-          friends={friends}
-          events={events}
-          onSelectFriend={(f) => setSelectedFriend(f)}
-          selectedFriend={selectedFriend}
-        />
+        {view === 'orbit' ? (
+          <Graph
+            friends={friends}
+            events={events}
+            onSelectFriend={(f) => setSelectedFriend(f)}
+            selectedFriend={selectedFriend}
+          />
+        ) : (
+          <Dashboard
+            friends={friends}
+            events={events}
+            onSelectFriend={(f) => setSelectedFriend(f)}
+          />
+        )}
         <div className="panel-overlay">
           <div
             className={`panel-backdrop ${selectedFriend ? 'visible' : ''}`}

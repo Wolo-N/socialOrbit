@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { exportData, importData } from '../api.js';
 
-export default function Header({ friends, events, onLogHangout, onLogout, onRefresh }) {
+export default function Header({ friends, events, view, onChangeView, onLogHangout, onLogout, onRefresh }) {
   const fileInputRef = useRef(null);
   const totalEvents = events.length;
   const friendCount = friends.length;
@@ -41,27 +41,45 @@ export default function Header({ friends, events, onLogHangout, onLogout, onRefr
       <div className="header glass">
         <div className="header-left">
           <span className="header-title">&#x2B21; Social Orbit</span>
-          <div className="header-stats">
-            <span className="stat-pill">
-              <span className="stat-value">{totalEvents}</span> events
-            </span>
-            <span className="stat-pill">
-              <span className="stat-value">{friendCount}</span> friends
-            </span>
-            {mostSeen && (
+          {onChangeView && (
+            <div className="view-toggle">
+              <button
+                className={view === 'orbit' ? 'active' : ''}
+                onClick={() => onChangeView('orbit')}
+              >
+                Orbit
+              </button>
+              <button
+                className={view === 'dashboard' ? 'active' : ''}
+                onClick={() => onChangeView('dashboard')}
+              >
+                Dashboard
+              </button>
+            </div>
+          )}
+          {view !== 'dashboard' && (
+            <div className="header-stats">
               <span className="stat-pill">
-                most seen: <span className="stat-value">{mostSeen.name}</span>
+                <span className="stat-value">{totalEvents}</span> events
               </span>
-            )}
-            {needsAttention.length > 0 && (
-              <span className="stat-pill" style={{ borderColor: 'rgba(251, 191, 36, 0.3)' }}>
-                <span className="stat-value" style={{ color: 'var(--yellow)' }}>
-                  {needsAttention.length}
-                </span>{' '}
-                need attention
+              <span className="stat-pill">
+                <span className="stat-value">{friendCount}</span> friends
               </span>
-            )}
-          </div>
+              {mostSeen && (
+                <span className="stat-pill">
+                  most seen: <span className="stat-value">{mostSeen.name}</span>
+                </span>
+              )}
+              {needsAttention.length > 0 && (
+                <span className="stat-pill" style={{ borderColor: 'rgba(251, 191, 36, 0.3)' }}>
+                  <span className="stat-value" style={{ color: 'var(--yellow)' }}>
+                    {needsAttention.length}
+                  </span>{' '}
+                  need attention
+                </span>
+              )}
+            </div>
+          )}
         </div>
         <div className="header-right">
           <input
@@ -102,7 +120,7 @@ export default function Header({ friends, events, onLogHangout, onLogout, onRefr
           </button>
         </div>
       </div>
-      {needsAttention.length > 0 && (
+      {view !== 'dashboard' && needsAttention.length > 0 && (
         <div className="attention-bar">
           &#x26A0; Haven't seen:{' '}
           {needsAttention.map((f) => f.name).join(', ')}
