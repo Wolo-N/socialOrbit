@@ -100,3 +100,14 @@ export async function dismissGroupSuggestion(key) {
     body: JSON.stringify({ key }),
   });
 }
+
+export async function setGoal(friendId, cadenceDays) {
+  return request(`/api/goals/${friendId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ cadence_days: cadenceDays }),
+  });
+}
+
+export async function deleteGoal(friendId) {
+  return request(`/api/goals/${friendId}`, { method: 'DELETE' });
+}

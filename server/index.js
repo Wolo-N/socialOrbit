@@ -9,6 +9,7 @@ import authRoutes from './routes/auth.js';
 import friendsRoutes from './routes/friends.js';
 import eventsRoutes from './routes/events.js';
 import groupsRoutes from './routes/groups.js';
+import goalsRoutes from './routes/goals.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -57,6 +58,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/friends', requireAuth, friendsRoutes);
 app.use('/api/events', requireAuth, eventsRoutes);
 app.use('/api/groups', requireAuth, groupsRoutes);
+app.use('/api/goals', requireAuth, goalsRoutes);
 
 // Export endpoint
 app.get('/api/export', requireAuth, (req, res) => {
@@ -66,7 +68,8 @@ app.get('/api/export', requireAuth, (req, res) => {
   const scores = db.prepare('SELECT * FROM scores').all();
   const friendGroups = db.prepare('SELECT * FROM friend_groups').all();
   const friendGroupMembers = db.prepare('SELECT * FROM friend_group_members').all();
-  res.json({ friends, events, eventFriends, scores, friendGroups, friendGroupMembers, exportedAt: new Date().toISOString() });
+  const friendGoals = db.prepare('SELECT * FROM friend_goals').all();
+  res.json({ friends, events, eventFriends, scores, friendGroups, friendGroupMembers, friendGoals, exportedAt: new Date().toISOString() });
 });
 
 // Import endpoint
@@ -124,6 +127,15 @@ app.post('/api/import', requireAuth, (req, res) => {
         const insertGM = db.prepare('INSERT INTO friend_group_members (group_id, friend_id) VALUES (?, ?)');
         for (const gm of req.body.friendGroupMembers) {
           insertGM.run(gm.group_id, gm.friend_id);
+        }
+      }
+
+      // Import friend goals (if present)
+      db.prepare('DELETE FROM friend_goals').run();
+      if (req.body.friendGoals) {
+        const insertGoal = db.prepare('INSERT INTO friend_goals (friend_id, cadence_days, created_at) VALUES (?, ?, ?)');
+        for (const g of req.body.friendGoals) {
+          insertGoal.run(g.friend_id, g.cadence_days, g.created_at);
         }
       }
     });

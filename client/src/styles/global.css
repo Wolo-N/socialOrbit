@@ -494,6 +494,59 @@ input::placeholder, textarea::placeholder {
   background: rgba(248, 113, 113, 0.1);
 }
 
+/* Goal editor (FriendPanel) */
+.goal-editor-current {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  margin-bottom: 8px;
+}
+
+.goal-editor-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.goal-editor-cadence {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-primary);
+}
+
+.goal-editor-status {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+}
+
+.goal-editor-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.goal-editor-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.goal-preset-btn {
+  font-size: 0.7rem !important;
+  padding: 5px 10px !important;
+}
+
+.goal-preset-btn.active {
+  background: rgba(123, 110, 246, 0.2) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent-light) !important;
+}
+
 .panel-danger-zone {
   margin-top: 32px;
   padding-top: 20px;

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getEvents, deleteEvent, deleteFriend } from '../api.js';
+import { getEvents, deleteEvent, deleteFriend, setGoal, deleteGoal } from '../api.js';
+import { CADENCE_PRESETS, cadenceLabel, goalStatus, goalStatusColor } from '../utils/timeAgg.js';
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
@@ -19,12 +20,26 @@ function getRecencyColor(lastSeen) {
 export default function FriendPanel({ friend, onClose, onRefresh }) {
   const [events, setEvents] = useState([]);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [editingGoal, setEditingGoal] = useState(false);
 
   useEffect(() => {
     if (!friend) return;
     setConfirmDelete(false);
+    setEditingGoal(false);
     getEvents(friend.id).then(setEvents).catch(() => {});
   }, [friend]);
+
+  const handleSetGoal = async (days) => {
+    await setGoal(friend.id, days);
+    setEditingGoal(false);
+    onRefresh();
+  };
+
+  const handleDeleteGoal = async () => {
+    await deleteGoal(friend.id);
+    setEditingGoal(false);
+    onRefresh();
+  };
 
   const handleDeleteFriend = async () => {
     await deleteFriend(friend.id);
@@ -86,7 +101,55 @@ export default function FriendPanel({ friend, onClose, onRefresh }) {
             </div>
           </div>
 
-          <div className="panel-section-title">Event History</div>
+          <div className="panel-section-title">Cadence Goal</div>
+          {friend.cadence_days && !editingGoal ? (
+            <div className="goal-editor-current">
+              <div className="goal-editor-info">
+                <span
+                  className="goal-dot"
+                  style={{ background: goalStatusColor(goalStatus(friend)?.state) }}
+                />
+                <span className="goal-editor-cadence">{cadenceLabel(friend.cadence_days)}</span>
+                <span
+                  className="goal-editor-status"
+                  style={{ color: goalStatusColor(goalStatus(friend)?.state) }}
+                >
+                  {goalStatus(friend)?.label}
+                </span>
+              </div>
+              <div className="goal-editor-actions">
+                <button className="btn btn-ghost" onClick={() => setEditingGoal(true)} style={{ fontSize: '0.7rem', padding: '4px 10px' }}>
+                  Change
+                </button>
+                <button className="btn btn-ghost" onClick={handleDeleteGoal} style={{ fontSize: '0.7rem', padding: '4px 10px' }}>
+                  Remove
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="goal-editor-presets">
+              {CADENCE_PRESETS.map((p) => (
+                <button
+                  key={p.days}
+                  className={`btn btn-ghost goal-preset-btn ${friend.cadence_days === p.days ? 'active' : ''}`}
+                  onClick={() => handleSetGoal(p.days)}
+                >
+                  {p.label}
+                </button>
+              ))}
+              {editingGoal && (
+                <button
+                  className="btn btn-ghost goal-preset-btn"
+                  onClick={() => setEditingGoal(false)}
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
+          )}
+
+          <div className="panel-section-title" style={{ marginTop: '20px' }}>Event History</div>
 
           {events.length === 0 && (
             <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}>

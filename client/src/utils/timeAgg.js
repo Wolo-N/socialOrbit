@@ -289,3 +289,62 @@ export function pctDelta(current, previous) {
   if (previous === 0 || previous == null) return null;
   return ((current - previous) / previous) * 100;
 }
+
+// ─── Cadence Goals ───
+
+export const CADENCE_PRESETS = [
+  { label: 'Weekly', days: 7 },
+  { label: 'Bi-weekly', days: 14 },
+  { label: 'Monthly', days: 30 },
+  { label: 'Quarterly', days: 90 },
+];
+
+export function cadenceLabel(days) {
+  const preset = CADENCE_PRESETS.find((p) => p.days === days);
+  if (preset) return preset.label;
+  return `Every ${days}d`;
+}
+
+const GOAL_COLORS = {
+  ontrack: '#34d399',
+  due: '#fbbf24',
+  overdue: '#f97316',
+  critical: '#f87171',
+};
+
+export function goalStatusColor(state) {
+  return GOAL_COLORS[state] || '#64748b';
+}
+
+export function goalStatus(friend, now = Date.now()) {
+  if (!friend?.cadence_days) return null;
+  const days = daysSinceLastSeen(friend, now);
+  if (days === null) {
+    return { state: 'critical', ratio: Infinity, daysUntilDue: -Infinity, label: 'never seen' };
+  }
+  const ratio = days / friend.cadence_days;
+  const daysUntilDue = friend.cadence_days - days;
+  let state;
+  if (ratio < 0.7) state = 'ontrack';
+  else if (ratio < 1.0) state = 'due';
+  else if (ratio < 1.5) state = 'overdue';
+  else state = 'critical';
+
+  let label;
+  if (daysUntilDue > 0) label = `${daysUntilDue}d left`;
+  else if (daysUntilDue === 0) label = 'due today';
+  else label = `${Math.abs(daysUntilDue)}d overdue`;
+
+  return { state, ratio, daysUntilDue, label };
+}
+
+export function goalSummary(friends, now = Date.now()) {
+  const result = { ontrack: 0, due: 0, overdue: 0, critical: 0, total: 0 };
+  for (const f of friends) {
+    const s = goalStatus(f, now);
+    if (!s) continue;
+    result[s.state] += 1;
+    result.total += 1;
+  }
+  return result;
+}

@@ -7,9 +7,11 @@ router.get('/', (req, res) => {
   const friends = db.prepare(`
     SELECT f.id, f.name, f.created_at,
       s.score, s.last_seen, s.total_events,
-      s.solo_count, s.group_count
+      s.solo_count, s.group_count,
+      g.cadence_days
     FROM friends f
     LEFT JOIN scores s ON s.friend_id = f.id
+    LEFT JOIN friend_goals g ON g.friend_id = f.id
     ORDER BY f.name ASC
   `).all();
   res.json(friends);

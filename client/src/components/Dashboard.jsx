@@ -9,11 +9,12 @@ import {
 import KpiStrip from './dashboard/KpiStrip.jsx';
 import PeriodSummary from './dashboard/PeriodSummary.jsx';
 import ActivityChart from './dashboard/ActivityChart.jsx';
-import CalendarHeatmap from './dashboard/CalendarHeatmap.jsx';
+import YearCalendar from './dashboard/YearCalendar.jsx';
 import TopFriendsBar from './dashboard/TopFriendsBar.jsx';
 import RecencyHistogram from './dashboard/RecencyHistogram.jsx';
 import CumulativeFriends from './dashboard/CumulativeFriends.jsx';
 import SoloVsGroupDonut from './dashboard/SoloVsGroupDonut.jsx';
+import GoalHealthCard from './dashboard/GoalHealthCard.jsx';
 
 export default function Dashboard({ friends, events, onSelectFriend }) {
   const [period, setPeriod] = useState('month');
@@ -59,8 +60,6 @@ export default function Dashboard({ friends, events, onSelectFriend }) {
     [periodEvents, granularity, chartStart, range.end]
   );
 
-  const showHeatmap = period === 'year' || period === 'ytd' || period === 'all';
-
   return (
     <div className="dashboard">
       <div className="dashboard-toolbar">
@@ -97,17 +96,21 @@ export default function Dashboard({ friends, events, onSelectFriend }) {
           <ActivityChart buckets={buckets} granularity={granularity} />
         </div>
 
-        {showHeatmap && (
-          <div className="dashboard-card dashboard-card-wide">
-            <div className="dashboard-card-title">
-              Calendar heatmap
-              <span className="dashboard-card-sub">
-                events per day
-              </span>
-            </div>
-            <CalendarHeatmap events={periodEvents} start={chartStart} end={range.end} />
+        <div className="dashboard-card dashboard-card-wide">
+          <div className="dashboard-card-title">
+            Year calendar
+            <span className="dashboard-card-sub">events per day · past 365 days</span>
           </div>
-        )}
+          <YearCalendar events={events} />
+        </div>
+
+        <div className="dashboard-card">
+          <div className="dashboard-card-title">
+            Cadence goals
+            <span className="dashboard-card-sub">adherence</span>
+          </div>
+          <GoalHealthCard friends={friends} onSelectFriend={onSelectFriend} />
+        </div>
 
         <div className="dashboard-card">
           <div className="dashboard-card-title">

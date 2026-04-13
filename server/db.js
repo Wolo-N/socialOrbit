@@ -69,6 +69,13 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS dismissed_group_suggestions (
     key TEXT PRIMARY KEY
   );
+
+  CREATE TABLE IF NOT EXISTS friend_goals (
+    friend_id INTEGER PRIMARY KEY,
+    cadence_days INTEGER NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (friend_id) REFERENCES friends(id) ON DELETE CASCADE
+  );
 `);
 
 // Seed data on first run
