@@ -214,6 +214,12 @@
   padding: 14px 16px 12px;
   display: flex;
   flex-direction: column;
+  position: relative;
+  z-index: 0;
+}
+
+.dashboard-card:hover {
+  z-index: 10;
 }
 
 .dashboard-card-wide {
